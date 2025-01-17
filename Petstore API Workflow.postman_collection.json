@@ -1,0 +1,236 @@
+{
+	"info": {
+		"_postman_id": "10034397-e3ab-4dae-93cb-8f4c738ec43b",
+		"name": "Petstore API Workflow",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "31061650"
+	},
+	"item": [
+		{
+			"name": "Create Pet",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"",
+							"// Генерація випадкового ID та імені для тварини",
+							"const petId = Math.floor(Math.random() * 100000);",
+							"const petName = \"Pet_\" + Math.random().toString(36).substring(7);",
+							"pm.environment.set(\"petId\", petId);",
+							"pm.environment.set(\"petName\", petName);",
+							"",
+							"// Визначення категорій",
+							"const categories = [",
+							"    { id: 1, name: \"dog\" },",
+							"    { id: 2, name: \"cat\" },",
+							"    { id: 3, name: \"hamster\" }",
+							"];",
+							"",
+							"// Вибір випадкової категорії",
+							"const randomIndex = Math.floor(Math.random() * categories.length);",
+							"const selectedCategory = categories[randomIndex];",
+							"",
+							"// Збереження ID і назви категорії в середовище",
+							"pm.environment.set(\"petCategoryId\", selectedCategory.id);",
+							"pm.environment.set(\"petCategoryName\", selectedCategory.name);",
+							"",
+							"",
+							"// Словник тегів для кожної категорії",
+							"const categoryTags = {",
+							"    dog: [",
+							"        { id: 1, name: \"chews shoes\" },",
+							"        { id: 2, name: \"eats a lot\" },",
+							"        { id: 3, name: \"scares cats\" }",
+							"    ],",
+							"    cat: [",
+							"        { id: 4, name: \"pees in slippers\" },",
+							"        { id: 5, name: \"knocks things over\" },",
+							"        { id: 6, name: \"misses litter box\" }",
+							"    ],",
+							"    hamster: [",
+							"        { id: 7, name: \"often runs away\" },",
+							"        { id: 8, name: \"chews everything\" },",
+							"        { id: 9, name: \"runs all night\" }",
+							"    ]",
+							"};",
+							"",
+							"// Отримання тегів для вибраної категорії",
+							"const petCategoryName = pm.environment.get(\"petCategoryName\");",
+							"const availableTags = categoryTags[petCategoryName] || [];",
+							"",
+							"// Вибір випадкового тегу",
+							"if (availableTags.length > 0) {",
+							"    const randomTagIndex = Math.floor(Math.random() * availableTags.length);",
+							"    const selectedTag = availableTags[randomTagIndex];",
+							"",
+							"    // Збереження тегу в середовище",
+							"    pm.environment.set(\"petTagId\", selectedTag.id);",
+							"    pm.environment.set(\"petTagName\", selectedTag.name);",
+							"}",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Pet created successfully\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    pm.expect(pm.response.json().id).to.eql(parseInt(pm.environment.get(\"petId\")));",
+							"});",
+							"pm.test(\"Pet name is present\", function () {",
+							"    const jsonResponse = pm.response.json();",
+							"    pm.expect(jsonResponse.name).to.not.be.empty;",
+							"});",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": {{petId}},\n  \"name\": \"{{petName}}\",\n  \"category\": \n            {\n                 \"id\": {{petCategoryId}},\n                 \"name\": \"{{petCategoryName}}\"\n            },\n  \"photoUrls\": [\"https://example.com/photo.jpg\"],\n  \"tags\": [\n            {\n                 \"id\": {{petTagId}},\n                 \"name\": \"{{petTagName}}\"\n            }\n        ],\n  \"status\": \"avaliable\"\n}\n"
+				},
+				"url": "{{baseUrl}}/pet"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Order created successfully\", function () {",
+							"  pm.response.to.have.status(200);",
+							"  pm.expect(pm.response.json().id).to.eql(parseInt(pm.environment.get(\"orderId\")));",
+							"});",
+							"",
+							"pm.test(\"Order ID is an integer\", function () {",
+							"  const jsonResponse = pm.response.json();",
+							"  pm.expect(jsonResponse.id).to.be.a('number');",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"orderId\", Math.floor(Math.random() * 100000));",
+							"pm.environment.set(\"isoDate\", new Date().toISOString());",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"id\": {{orderId}},\n  \"petId\": {{petId}},\n  \"quantity\": 1,\n  \"shipDate\": \"{{isoDate}}\",\n  \"status\": \"placed\",\n  \"complete\": true\n}\n"
+				},
+				"url": "{{baseUrl}}/store/order"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Order by ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Order retrieved successfully\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.petId).to.eql(parseInt(pm.environment.get(\"petId\")));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{baseUrl}}/store/order/{{orderId}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Pet deleted successfully\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "{{baseUrl}}/pet/{{petId}}"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://petstore.swagger.io/v2"
+		},
+		{
+			"key": "petId",
+			"value": ""
+		},
+		{
+			"key": "petName",
+			"value": ""
+		},
+		{
+			"key": "orderId",
+			"value": ""
+		},
+		{
+			"key": "isoDate",
+			"value": ""
+		}
+	]
+}
